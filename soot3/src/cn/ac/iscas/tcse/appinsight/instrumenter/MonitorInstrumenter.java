@@ -26,49 +26,91 @@ import soot.jimple.Jimple;
 import soot.jimple.StringConstant;
 import soot.util.Chain;
 
+/** our instrumenter class */
 public class MonitorInstrumenter extends BodyTransformer
 {
 
-	static public SootClass apiClass, udidManagerClass, udidServiceClass,
-		helloClass, toastClass;
-		
+	private SootClass declaringClass;
 	
+	private SootMethod getConMethod,makeTextMethod,showMethod,replaceStringMethod;
+	
+	private PatchingChain units;
+	
+	private Chain npUnits;
+	
+	private Unit tmpUnit,baseUnit;
+	
+	private Local r0,m1,m2,m3,m4,m5,m6;
+	
+	Iterator<Unit> unitIt;
 	
 	@Override
+	/** main procedure */
 	protected void internalTransform(final Body b, String phaseName, Map options)
 	{
 		
 		
 //		System.out.println("***"+b.getMethod().getName());
 		
-		SootClass tmpSootClass = b.getMethod().getDeclaringClass();
 		
+		checkActivity(b);
+		
+		if(!checkOnCreate(b))
+			return;
+		
+		init(b);
+		
+		instrument(b);
+	}
+	
+	
+	/** check if it is an activity */
+	private void checkActivity(Body b)
+	{
+		declaringClass = b.getMethod().getDeclaringClass();
 		while(true)
 		{
-			
-			if(tmpSootClass.getName().equals("java.lang.Object"))
+			//haven't find, return
+			if(declaringClass.getName().equals("java.lang.Object"))
 				return;
-			if(tmpSootClass.getName().equals("android.content.Context"))
+			
+			//if current class is activity
+			if(declaringClass.getName().equals("android.app.Activity"))
 				break;
-			tmpSootClass = tmpSootClass.getSuperclass();
 			
+			//find its super class
+			declaringClass = declaringClass.getSuperclass();
 		}
-		
-
+	}
+	
+	/** check if the body is OnCreate method body
+	 * @return true if yes
+	 * false if no */
+	private boolean checkOnCreate(Body b)
+	{
 		if(!b.getMethod().getName().equals("onCreate"))
-		{
-			return;
-			
-		}
-		
-		
-		final PatchingChain units = b.getUnits();	
-		Unit tmpUnit;
+			return false;
+		return true;
+	}
+	
+	
+	/** initialize variables and locals */
+	private void init(Body b)
+	{
+		initVariable(b);
+		initLocals(b);
+	}
+	
+	private void initVariable(Body b)
+	{
+		units = b.getUnits();	
+		declaringClass = b.getMethod().getDeclaringClass();
+		npUnits = units.getNonPatchingChain();	
+	}
+	
+	private void initLocals(Body b)
+	{
 		// add some locals
-		Local r0,m1,m2,m3,m4,m5,m6;
-		SootClass declaringClass = b.getMethod().getDeclaringClass();
-		Chain npUnits = units.getNonPatchingChain();	
-
 		//r0 is the local variable "$r0"
 		r0 = b.getLocals().getFirst();
 		m1 = Jimple.v().newLocal("m1", RefType.v("android.content.Context"));
@@ -83,11 +125,12 @@ public class MonitorInstrumenter extends BodyTransformer
 		b.getLocals().add(m4);
 //		b.getLocals().add(m5);
 		b.getLocals().add(m6);
-
+	}
+	
+	private void instrument(Body b)
+	{
 		//m1 = context
-		Unit baseUnit = null;
-		tmpUnit = null;
-		Iterator<Unit> unitIt = npUnits.iterator();
+		unitIt = npUnits.iterator();
 		while (unitIt.hasNext())
 		{
 			tmpUnit = unitIt.next();
@@ -98,7 +141,7 @@ public class MonitorInstrumenter extends BodyTransformer
 			}
 			baseUnit = tmpUnit;
 		}
-		SootMethod getConMethod = Scene
+		getConMethod = Scene
 				.v()
 				.getMethod(
 						"<android.content.ContextWrapper: android.content.Context getApplicationContext()>");
@@ -126,7 +169,7 @@ public class MonitorInstrumenter extends BodyTransformer
 		
 		
 		//m3 = Toast.makeText(m1,,m2)
-		SootMethod makeTextMethod = Scene.v().
+		makeTextMethod = Scene.v().
 				getMethod("<android.widget.Toast: android.widget.Toast makeText(android.content.Context,java.lang.CharSequence,int)>");
 		npUnits.insertBefore(
 				Jimple.v().newAssignStmt(
@@ -137,7 +180,7 @@ public class MonitorInstrumenter extends BodyTransformer
 				baseUnit);
 
 		//m3.show()
-		SootMethod showMethod = Scene.v().getMethod("<android.widget.Toast: void show()>");
+		showMethod = Scene.v().getMethod("<android.widget.Toast: void show()>");
 		npUnits.insertBefore(
 				Jimple.v().newInvokeStmt(
 						Jimple.v().newVirtualInvokeExpr(m3,
@@ -145,7 +188,7 @@ public class MonitorInstrumenter extends BodyTransformer
 		
 		
 		//m4 = Hello.replaceString("Hello world")
-		SootMethod replaceStringMethod = Scene
+		replaceStringMethod = Scene
 				.v()
 				.getMethod(
 						"<cn.ac.iscas.tcse.appinsight.instrumenter.Hello: java.lang.String replaceString(java.lang.String)>");
@@ -232,11 +275,5 @@ public class MonitorInstrumenter extends BodyTransformer
 		
 		
 		b.validate();
-		
-			
-		
-		
-		
 	}
-
 }
