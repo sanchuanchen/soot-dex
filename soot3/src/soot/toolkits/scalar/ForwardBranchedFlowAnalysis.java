@@ -66,7 +66,7 @@ public abstract class ForwardBranchedFlowAnalysis<A> extends BranchedFlowAnalysi
         return true;
     }
 
-    // Accumulate the previous afterFlow sets.
+    /** Accumulate the previous afterFlow sets.*/
     private void accumulateAfterFlowSets(Unit s, A[] flowRepositories, List<Object> previousAfterFlows)
     {
         int repCount = 0;
