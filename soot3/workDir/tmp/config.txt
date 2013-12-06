@@ -9,7 +9,7 @@ Run Configurations:
 	Program arguments:
 	
 	case (1):
-	-cp .\workDir\libDir;. -pp -android-jars .\workDir\platforms -process-dir .\workDir\instruDir\my.apk
+	-cp ./workDir/libDir:. -pp -android-jars ./workDir/platforms -process-dir ./workDir/instruDir/my.apk
 
 	case (2):
 	--help
