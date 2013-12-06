@@ -1,0 +1,20 @@
+Run Configurations:
+
+	Name:
+	soot3
+
+	Main class:
+	cn.ac.iscas.tcse.appinsight.instrumenter.instruMain
+
+	Program arguments:
+	
+	case (1):
+	-cp .\workDir\libDir;. -pp -android-jars .\workDir\platforms -process-dir .\workDir\instruDir\my.apk
+
+	case (2):
+	--help
+
+	VM arguments:
+	
+
+
