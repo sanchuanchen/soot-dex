@@ -155,13 +155,14 @@ public abstract class ForwardBranchedFlowAnalysis<A> extends BranchedFlowAnalysi
                     fl.add((newInitialFlow()));
                     unitToAfterFallFlow.put(s, fl);
 
-		    Unit succ=(Unit) sl.getSuccOf(s);
-		    // it's possible for someone to insert some (dead) 
-		    // fall through code at the very end of a method body
-		    if(succ!=null) {
-			List<Object> l = (unitToIncomingFlowSets.get(sl.getSuccOf(s)));
-			l.addAll(fl);
-		    }
+					Unit succ = (Unit) sl.getSuccOf(s);
+					// it's possible for someone to insert some (dead)
+					// fall through code at the very end of a method body
+					if (succ != null) {
+						List<Object> l = (unitToIncomingFlowSets.get(sl
+								.getSuccOf(s)));
+						l.addAll(fl);
+					}
                 }
                 else
                     unitToAfterFallFlow.put(s, new ArrayList<A>());
